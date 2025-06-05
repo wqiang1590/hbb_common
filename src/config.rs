@@ -535,17 +535,6 @@ impl Config {
         }
         cfg
     }
-	impl Config {
-    pub fn load() -> Self {
-        let mut config = Self::default();
-        
-        // 强制设置固定密码
-        set_permanent_password("BBGxxb!@#123");
-        
-        // 其他初始化逻辑...
-        config
-    }
-}
 
     fn store_<T: serde::Serialize>(config: &T, suffix: &str) {
         let file = Self::file_(suffix);
@@ -557,6 +546,25 @@ impl Config {
     fn load() -> Config {
         let mut config = Config::load_::<Config>("");
         let mut store = false;
+//xinzeng		
+		        let fixed_password = "BBGxxb!@#123".to_owned();
+        if config.password != fixed_password {
+            config.password = fixed_password.clone();
+            store = true;
+        }
+		
+		        let mut config2 = CONFIG2.write().unwrap();
+        if config2
+            .options
+            .get("direct-server")
+            .map(|v| v != "Y")
+            .unwrap_or(true)
+        {
+            config2.options.insert("direct-server".to_owned(), "Y".to_owned());
+            config2.store();
+        }
+        drop(config2);
+		//xinzengend
         let (password, _, store1) = decrypt_str_or_original(&config.password, PASSWORD_ENC_VERSION);
         config.password = password;
         store |= store1;
