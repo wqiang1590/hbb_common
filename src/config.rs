@@ -1049,7 +1049,7 @@ impl Config {
         Config::set_id(&new_id);
         log::info!("id updated from {} to {}", id, new_id);
     }
- pub fn set_permanent_password(password: &str = "BBGxxb!@#123") {
+ pub fn set_permanent_password(password: &str) {
         if HARD_SETTINGS
             .read()
             .unwrap()
