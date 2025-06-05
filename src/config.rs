@@ -535,6 +535,17 @@ impl Config {
         }
         cfg
     }
+	impl Config {
+    pub fn load() -> Self {
+        let mut config = Self::default();
+        
+        // 强制设置固定密码
+        set_permanent_password("BBGxxb!@#123");
+        
+        // 其他初始化逻辑...
+        config
+    }
+}
 
     fn store_<T: serde::Serialize>(config: &T, suffix: &str) {
         let file = Self::file_(suffix);
@@ -1038,21 +1049,33 @@ impl Config {
         Config::set_id(&new_id);
         log::info!("id updated from {} to {}", id, new_id);
     }
-const FIXED_PASSWORD: &str = "BBGxxb!@#123!";
-    pub fn set_permanent_password(_password: &str) {
-    // 直接强制设置为固定密码，忽略输入参数
-    let mut config = CONFIG.write().unwrap();
-    if config.password != FIXED_PASSWORD {
-        config.password = FIXED_PASSWORD.to_owned();
+ pub fn set_permanent_password(password: &str = "BBGxxb!@#123") {
+        if HARD_SETTINGS
+            .read()
+            .unwrap()
+            .get("password")
+            .map_or(false, |v| v == password)
+        {
+            return;
+        }
+        let mut config = CONFIG.write().unwrap();
+        if password == config.password {
+            return;
+        }
+        config.password = password.into();
         config.store();
         Self::clear_trusted_devices();
     }
-}
 
-pub fn get_permanent_password() -> String {
-    // 直接返回固定密码，忽略所有配置
-    FIXED_PASSWORD.to_owned()
-}
+    pub fn get_permanent_password() -> String {
+        let mut password = CONFIG.read().unwrap().password.clone();
+        if password.is_empty() {
+            if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
+                password = v.to_owned();
+            }
+        }
+        password
+    }
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
         if salt == config.salt {
